@@ -5,7 +5,6 @@
         xsi:schemaLocation="http://thelia.net/schema/dic/config http://thelia.net/schema/dic/config/thelia-1.0.xsd">
 
     <loops>
-        <loop class="SoColissimo\Loop\CheckRightsLoop" name="socolissimo.check.rights" />
         <loop class="SoColissimo\Loop\SoColissimoDeliveryMode" name="socolissimo.delivery.mode" />
         <loop class="SoColissimo\Loop\SoColissimoPrice" name="socolissimo" />
         <loop class="SoColissimo\Loop\SoColissimoId" name="socolissimoid" />

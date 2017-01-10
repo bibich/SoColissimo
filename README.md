@@ -33,16 +33,7 @@ Pour importer les fichiers générés via l'export avec Expeditor INET, vous ave
 
 Boucles
 -------
-1. socolissimo.check.rights
-    - Arguments:
-        Aucun
-    - Sorties:
-        1. $ERRMES:  message d'erreur
-        2. $ERRFILE: fichier où le problème a été detecté
-    - Utilisation:
-        ```{loop name="yourloopname" type="socolissimo.check.rights"}<!-- your template -->{/loop}```
-
-2. socolissimo
+1. socolissimo
     - Arguments:
         1. area | obligatoire | id de l'area dont on veut savoir les prix
     - Sorties:
@@ -51,7 +42,7 @@ Boucles
     - Utilisation:
         ```{loop name="yourloopname" type="socolissimo"}<!-- your template -->{/loop}```
 
-3. socolissimoid
+2. socolissimoid
     - Arguments:
         Aucun
     - Sorties:
@@ -59,7 +50,7 @@ Boucles
     - Utilisation:
         ```{loop name="yourloopname" type="socolissimoid"}<!-- your template -->{/loop}```
 
-4. socolissimo.around
+3. socolissimo.around
     - Arguments:
         1. zipcode | optionnel | code postal de la ville recherchée
         2. city    | optionnel | nom de la ville recherchée
@@ -76,7 +67,7 @@ Boucles
     - Utilisation:
         ```{loop name="yourloopname" type="socolissimo.around"}<!-- your template -->{/loop}```
 
-5. address.socolissimo
+4. address.socolissimo
     - Arguments:
         Les mêmes que la boucle address
     - Sorties:
@@ -84,7 +75,7 @@ Boucles
     - Utilisation:
         ```{loop name="yourloopname" type="address.socolissimo"}<!-- your template -->{/loop}```
 
-6. order.notsent.socolissimo
+5. order.notsent.socolissimo
     - Arguments:
         Aucun
     - Sorties:
@@ -92,7 +83,7 @@ Boucles
     - Utilisation:
         ```{loop name="yourloopname" type="order.notsent.socolissimo"}<!-- your template -->{/loop}```
         
-7. socolissimo.order_address
+6. socolissimo.order_address
 	- Argument :
 		1. id | obligatoire | ID de la OrderAddressSoColissimo que l'on veut retrouver grâce à la boucle.
 	- Sorties :
@@ -123,16 +114,8 @@ To import exported files in Expeditor INET, you need the file THELIA_INET.FMT, t
 
 Loops
 -----
-1. socolissimo.check.rights
-    - Arguments:
-        None
-    - Output:
-        1. $ERRMES:  error message
-        2. $ERRFILE: file where the error has been detected
-    - Usage:
-        ```{loop name="yourloopname" type="socolissimo.check.rights"}<!-- your template -->{/loop}```
 
-2. socolissimo
+1. socolissimo
     - Arguments:
         1. area | mandatory | id de l'area dont on veut savoir les prix
     - Output:
@@ -141,7 +124,7 @@ Loops
     - Usage:
         ```{loop name="yourloopname" type="socolissimo"}<!-- your template -->{/loop}```
 
-3. socolissimoid
+2. socolissimoid
     - Arguments:
         None
     - Output:
@@ -149,7 +132,7 @@ Loops
     - Usage:
         ```{loop name="yourloopname" type="socolissimoid"}<!-- your template -->{/loop}```
 
-4. socolissimo.around
+3. socolissimo.around
     - Arguments:
         1. zipcode | optionnel | zipcode of the searched city
         2. city    | optionnel | name of the searched city
@@ -166,7 +149,7 @@ Loops
     - Usage:
         ```{loop name="yourloopname" type="socolissimo.around"}<!-- your template -->{/loop}```
 
-5. address.socolissimo
+4. address.socolissimo
     - Arguments:
         The same as the loop address
     - Output:
@@ -174,7 +157,7 @@ Loops
     - Usage:
         ```{loop name="yourloopname" type="address.socolissimo"}<!-- your template -->{/loop}```
 
-6. order.notsent.socolissimo
+5. order.notsent.socolissimo
     - Arguments:
         None
     - Output:
@@ -182,7 +165,7 @@ Loops
     - Usage:
         ```{loop name="yourloopname" type="order.notsent.socolissimo"}<!-- your template -->{/loop}```
         
-7. socolissimo.order_address
+6. socolissimo.order_address
 	- Arguments:
 		1. id | obligatoire | ID of the OrderAddressSoColissimo that should be retrieved by the loop.
 	- Outputs:
