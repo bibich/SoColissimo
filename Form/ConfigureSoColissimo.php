@@ -24,8 +24,10 @@
 namespace SoColissimo\Form;
 
 use SoColissimo\SoColissimo;
+use Symfony\Component\Validator\Constraints\Callback;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\Url;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 use Thelia\Core\Translation\Translator;
 use Thelia\Form\BaseForm;
 use Thelia\Model\ConfigQuery;
@@ -37,6 +39,9 @@ use Thelia\Model\ConfigQuery;
  */
 class ConfigureSoColissimo extends BaseForm
 {
+    /** @var Translator */
+    protected $translator = null;
+
     /**
      *
      * in this function you add all the fields you need for your Form.
@@ -66,8 +71,8 @@ class ConfigureSoColissimo extends BaseForm
                 'text',
                 [
                     'constraints' => [new NotBlank()],
-                    'data'        => ConfigQuery::read('socolissimo_login'),
-                    'label'       => $translator->trans("Account number"),
+                    'data'        => ConfigQuery::read(SoColissimo::CONFIG_LOGIN),
+                    'label'       => $this->trans("Account number"),
                     'label_attr'  => ['for' => 'accountnumber']
                 ]
             )
@@ -76,8 +81,8 @@ class ConfigureSoColissimo extends BaseForm
                 'text',
                 [
                     'constraints' => [new NotBlank()],
-                    'data'        => ConfigQuery::read('socolissimo_pwd'),
-                    'label'       => $translator->trans("Password"),
+                    'data'        => ConfigQuery::read(SoColissimo::CONFIG_PWD),
+                    'label'       => $this->trans("Password"),
                     'label_attr'  => ['for' => 'password']
                 ]
             )
@@ -91,8 +96,8 @@ class ConfigureSoColissimo extends BaseForm
                             'protocols' => ['https', 'http']
                         ])
                     ],
-                    'data'        => ConfigQuery::read('socolissimo_url_prod'),
-                    'label'       => $translator->trans("So Colissimo url prod"),
+                    'data'        => ConfigQuery::read(SoColissimo::CONFIG_URL_PROD),
+                    'label'       => $this->trans("So Colissimo url prod"),
                     'label_attr'  => ['for' => 'socolissimo_url_prod']
                 ]
             )
@@ -106,8 +111,8 @@ class ConfigureSoColissimo extends BaseForm
                             'protocols' => ['https', 'http']
                         ])
                     ],
-                    'data'        => ConfigQuery::read('socolissimo_url_test'),
-                    'label'       => $translator->trans("So Colissimo url test"),
+                    'data'        => ConfigQuery::read(SoColissimo::CONFIG_URL_TEST),
+                    'label'       => $this->trans("So Colissimo url test"),
                     'label_attr'  => ['for' => 'socolissimo_url_test']
                 ]
             )
@@ -116,8 +121,8 @@ class ConfigureSoColissimo extends BaseForm
                 'text',
                 [
                     'constraints' => [new NotBlank()],
-                    'data'        => ConfigQuery::read('socolissimo_test_mode'),
-                    'label'       => $translator->trans("test mode"),
+                    'data'        => ConfigQuery::read(SoColissimo::CONFIG_TEST_MODE),
+                    'label'       => $this->trans("test mode"),
                     'label_attr'  => ['for' => 'test_mode']
                 ]
             )
@@ -126,12 +131,87 @@ class ConfigureSoColissimo extends BaseForm
                 'text',
                 [
                     'constraints' => [],
-                    'data'        => ConfigQuery::read('socolissimo_google_map_key'),
-                    'label'       => $translator->trans("Google map API key"),
+                    'data'        => ConfigQuery::read(SoColissimo::CONFIG_GOOGLE_MAP_KEY),
+                    'label'       => $this->trans("Google map API key"),
                     'label_attr'  => ['for' => 'google_map_key']
                 ]
             )
+            ->add(
+                'export_type',
+                'choice',
+                [
+                    'choices' => [
+                        SoColissimo::EXPORT_COLISHIP => $this->trans('Coliship'),
+                        SoColissimo::EXPORT_EXPEDITOR => $this->trans('Expeditor'),
+                    ],
+                    'constraints' => [
+                        new Callback(
+                            array("methods" => array(array($this, "verifyValue")))
+                        )
+                    ],
+                    'label' => $this->trans('Export type'),
+                    'label_attr' => [
+                        'for' => 'export_type'
+                    ],
+                    'data' => ConfigQuery::read(SoColissimo::CONFIG_EXPORT_TYPE, SoColissimo::EXPORT_COLISHIP)
+                ]
+            )
+            ->add(
+                'sender_code',
+                'text',
+                [
+                    'label' => $this->trans('Sender code'),
+                    'label_attr' => [
+                        'for' => 'sender_code',
+                        'help' => $this->trans('Sender address code in Coliship address book')
+                    ],
+                    'required' => false,
+                    'data' => ConfigQuery::read(SoColissimo::CONFIG_SENDER_CODE)
+                ]
+            )
+            ->add(
+                'default_product',
+                'choice',
+                [
+                    'label' => $this->trans('Default product'),
+                    'choices' => SoColissimo::getProducts(),
+                    'label_attr' => [
+                        'for' => 'sender_code',
+                        'help' => $this->trans('The default Colissimo product to use')
+                    ],
+                    'required' => false,
+                    'data' => ConfigQuery::read(SoColissimo::CONFIG_DEFAULT_PRODUCT)
+                ]
+            )
         ;
+    }
+
+    public function verifyValue($value, ExecutionContextInterface $context)
+    {
+        if (SoColissimo::EXPORT_COLISHIP == $value) {
+            $data = $context->getRoot()->getData();
+
+            $senderCode = $data["sender_code"];
+            $accountNumber = $data["accountnumber"];
+
+            if (empty($senderCode) || empty($accountNumber)) {
+                $context->addViolation(
+                    $this->trans(
+                        'For Coliship export, you should provide an account number and a sender code',
+                        [],
+                        SoColissimo::DOMAIN
+                    )
+                );
+            }
+        }
+    }
+
+    protected function trans($id, $parameters = [], $locale = null)
+    {
+        if (null === $this->translator) {
+            $this->translator = Translator::getInstance();
+        }
+        return $this->translator->trans($id, $parameters, SoColissimo::DOMAIN, $locale);
     }
 
     /**

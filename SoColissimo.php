@@ -30,6 +30,7 @@ use SoColissimo\Model\SocolissimoDeliveryModeQuery;
 use SoColissimo\Model\SocolissimoPrice;
 use SoColissimo\Model\SocolissimoPriceQuery;
 use Symfony\Component\Config\Definition\Exception\Exception;
+use Thelia\Core\Translation\Translator;
 use Thelia\Model\AreaQuery;
 use Thelia\Model\ConfigQuery;
 use Thelia\Model\Country;
@@ -60,6 +61,25 @@ class SoColissimo extends AbstractDeliveryModule
     const IMPORT_NB_COLS = 2;
     const IMPORT_DELIVERY_REF_COL = 0;
     const IMPORT_ORDER_REF_COL = 1;
+
+    /* Configuration constants */
+    const CONFIG_LOGIN = 'socolissimo_login';
+    const CONFIG_PWD = 'socolissimo_pwd';
+    const CONFIG_URL_PROD = 'socolissimo_url_prod';
+    const CONFIG_URL_TEST = 'socolissimo_url_test';
+    const CONFIG_TEST_MODE = 'socolissimo_test_mode';
+    const CONFIG_GOOGLE_MAP_KEY = 'socolissimo_google_map_key';
+    const CONFIG_EXPORT_TYPE = 'socolissimo_export_type';
+    const CONFIG_SENDER_CODE = 'socolissimo_sender_code';
+    const CONFIG_DEFAULT_PRODUCT = 'socolissimo_default_product';
+
+    /* product types */
+    const TYPE_HOME = 'home';
+    const TYPE_RELAY = 'relay';
+
+    /* Export types */
+    const EXPORT_COLISHIP = 'coliship';
+    const EXPORT_EXPEDITOR = 'expeditor';
 
     /**
      * This method is called by the Delivery  loop, to check if the current module has to be displayed to the customer.
@@ -272,47 +292,7 @@ class SoColissimo extends AbstractDeliveryModule
             throw $e;
         }
 
-        ConfigQuery::write(
-            'socolissimo_login',
-            ConfigQuery::read('socolissimo_login', null),
-            1,
-            1
-        );
-
-        ConfigQuery::write(
-            'socolissimo_pwd',
-            ConfigQuery::read('socolissimo_pwd', null),
-            1,
-            1
-        );
-
-        ConfigQuery::write(
-            'socolissimo_pwd',
-            ConfigQuery::read('socolissimo_pwd', null),
-            1,
-            1
-        );
-
-        ConfigQuery::write(
-            'socolissimo_google_map_key',
-            ConfigQuery::read('socolissimo_google_map_key', null),
-            1,
-            1
-        );
-
-        ConfigQuery::write(
-            'socolissimo_url_prod',
-            ConfigQuery::read('socolissimo_url_prod', 'https://ws.colissimo.fr/pointretrait-ws-cxf/PointRetraitServiceWS/2.0?wsdl'),
-            1,
-            1
-        );
-
-        ConfigQuery::write(
-            'socolissimo_url_test',
-            ConfigQuery::read('socolissimo_url_test', 'https://pfi.telintrans.fr/pointretrait-ws-cxf/PointRetraitServiceWS/2.0?wsdl'),
-            1,
-            1
-        );
+        $this->updateConfigVariables();
 
         /* insert the images from image folder if first module activation */
         $module = $this->getModuleModel();
@@ -321,8 +301,77 @@ class SoColissimo extends AbstractDeliveryModule
         }
     }
 
+    /**
+     * @inheritdoc
+     */
+    public function update($currentVersion, $newVersion, ConnectionInterface $con = null)
+    {
+        parent::update($currentVersion, $newVersion, $con);
+
+        $this->updateConfigVariables();
+    }
+
+    public static function getProducts($productTypes = [self::TYPE_HOME, self::TYPE_RELAY])
+    {
+        $t = Translator::getInstance();
+
+        $products = [];
+
+        if (in_array(self::TYPE_HOME, $productTypes)) {
+            $products['DOM'] = $t->trans('Colissimo Domicile - without signature', [], self::DOMAIN);
+            $products['DOS'] = $t->trans('Colissimo Domicile - with signature', [], self::DOMAIN);
+            $products['COM'] = $t->trans('Colissimo Domicile Outre-Mer - without signature', [], self::DOMAIN);
+            $products['CDS'] = $t->trans('Colissimo Domicile Outre-Mer - with signature', [], self::DOMAIN);
+            $products['ECO'] = $t->trans('Colissimo Eco Outre-Mer', [], self::DOMAIN);
+            $products['COLI'] = $t->trans('International Colissimo Expert (outside Europe)', [], self::DOMAIN);
+        }
+
+        if (in_array(self::TYPE_RELAY, $productTypes)) {
+            $products['BPR'] = $t->trans('France Colissimo - Relay point - Post Office', [], self::DOMAIN);
+            $products['A2P'] = $t->trans(
+                'France Colissimo - Relay point - Pickup Relay or consigne Pickup Station',
+                [],
+                self::DOMAIN
+            );
+            $products['CMT'] = $t->trans(
+                'International (Europe) Colissimo - Relay point - Pickup Relay',
+                [],
+                self::DOMAIN
+            );
+            $products['BDP'] = $t->trans(
+                'International (Europe) Colissimo - Relay Point - Post Office',
+                [],
+                self::DOMAIN
+            );
+        }
+
+        return $products;
+    }
+
     public static function getModCode()
     {
         return ModuleQuery::create()->findOneByCode("SoColissimo")->getId();
+    }
+
+    /**
+     * Update config variables
+     */
+    protected function updateConfigVariables()
+    {
+        $defaults = [
+            self::CONFIG_LOGIN => null,
+            self::CONFIG_PWD => null,
+            self::CONFIG_URL_PROD => 'https://ws.colissimo.fr/pointretrait-ws-cxf/PointRetraitServiceWS/2.0?wsdl',
+            self::CONFIG_URL_TEST => 'https://pfi.telintrans.fr/pointretrait-ws-cxf/PointRetraitServiceWS/2.0?wsdl',
+            self::CONFIG_TEST_MODE => 1,
+            self::CONFIG_GOOGLE_MAP_KEY => null,
+            self::CONFIG_EXPORT_TYPE => self::EXPORT_COLISHIP,
+            self::CONFIG_SENDER_CODE => null,
+            self::CONFIG_DEFAULT_PRODUCT => array_keys(self::getProducts())[0],
+        ];
+
+        foreach ($defaults as $key => $value) {
+            ConfigQuery::write($key, ConfigQuery::read($key, $value), 1, 1);
+        }
     }
 }
