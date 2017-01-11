@@ -170,7 +170,6 @@ class SoColissimo extends AbstractDeliveryModule
         }
 
         return $postage;
-
     }
 
     /**
@@ -360,7 +359,7 @@ class SoColissimo extends AbstractDeliveryModule
             self::CONFIG_URL_TEST => 'https://pfi.telintrans.fr/pointretrait-ws-cxf/PointRetraitServiceWS/2.0?wsdl',
             self::CONFIG_TEST_MODE => 1,
             self::CONFIG_GOOGLE_MAP_KEY => null,
-            self::CONFIG_EXPORT_TYPE => self::EXPORT_COLISHIP,
+            self::CONFIG_EXPORT_TYPE => self::EXPORT_EXPEDITOR,
             self::CONFIG_SENDER_CODE => null,
             self::CONFIG_DEFAULT_PRODUCT => array_keys(self::getProducts())[0],
         ];
