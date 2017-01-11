@@ -311,39 +311,34 @@ class SoColissimo extends AbstractDeliveryModule
         $this->updateConfigVariables();
     }
 
-    public static function getProducts($productTypes = [self::TYPE_HOME, self::TYPE_RELAY])
+    public static function getProducts()
     {
         $t = Translator::getInstance();
 
         $products = [];
 
-        if (in_array(self::TYPE_HOME, $productTypes)) {
-            $products['DOM'] = $t->trans('Colissimo Domicile - without signature', [], self::DOMAIN);
-            $products['DOS'] = $t->trans('Colissimo Domicile - with signature', [], self::DOMAIN);
-            $products['COM'] = $t->trans('Colissimo Domicile Outre-Mer - without signature', [], self::DOMAIN);
-            $products['CDS'] = $t->trans('Colissimo Domicile Outre-Mer - with signature', [], self::DOMAIN);
-            $products['ECO'] = $t->trans('Colissimo Eco Outre-Mer', [], self::DOMAIN);
-            $products['COLI'] = $t->trans('International Colissimo Expert (outside Europe)', [], self::DOMAIN);
-        }
-
-        if (in_array(self::TYPE_RELAY, $productTypes)) {
-            $products['BPR'] = $t->trans('France Colissimo - Relay point - Post Office', [], self::DOMAIN);
-            $products['A2P'] = $t->trans(
-                'France Colissimo - Relay point - Pickup Relay or consigne Pickup Station',
-                [],
-                self::DOMAIN
-            );
-            $products['CMT'] = $t->trans(
-                'International (Europe) Colissimo - Relay point - Pickup Relay',
-                [],
-                self::DOMAIN
-            );
-            $products['BDP'] = $t->trans(
-                'International (Europe) Colissimo - Relay Point - Post Office',
-                [],
-                self::DOMAIN
-            );
-        }
+        $products['DOM'] = $t->trans('Colissimo Domicile - without signature', [], self::DOMAIN);
+        $products['DOS'] = $t->trans('Colissimo Domicile - with signature', [], self::DOMAIN);
+        $products['COM'] = $t->trans('Colissimo Domicile Outre-Mer - without signature', [], self::DOMAIN);
+        $products['CDS'] = $t->trans('Colissimo Domicile Outre-Mer - with signature', [], self::DOMAIN);
+        $products['ECO'] = $t->trans('Colissimo Eco Outre-Mer', [], self::DOMAIN);
+        $products['COLI'] = $t->trans('International Colissimo Expert (outside Europe)', [], self::DOMAIN);
+        $products['BPR'] = $t->trans('France Colissimo - Relay point - Post Office', [], self::DOMAIN);
+        $products['A2P'] = $t->trans(
+            'France Colissimo - Relay point - Pickup Relay or consigne Pickup Station',
+            [],
+            self::DOMAIN
+        );
+        $products['CMT'] = $t->trans(
+            'International (Europe) Colissimo - Relay point - Pickup Relay',
+            [],
+            self::DOMAIN
+        );
+        $products['BDP'] = $t->trans(
+            'International (Europe) Colissimo - Relay Point - Post Office',
+            [],
+            self::DOMAIN
+        );
 
         return $products;
     }

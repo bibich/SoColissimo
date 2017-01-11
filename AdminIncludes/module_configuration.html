@@ -102,6 +102,9 @@
                                     {intl l="Total taxed amount" d='socolissimo.ai'}
                                 </th>
                                 <th class="object-title">
+                                  {intl d='socolissimo.ai' l="Product code"}
+                                </th>
+                                <th class="object-title">
                                     {intl l="Package weight" d='socolissimo.ai'}
                                 </th>
                                 <th class="object-title">
@@ -132,6 +135,9 @@
                                         </td>
                                         <td>
                                             {$TOTAL_TAXED_AMOUNT} {loop name="list.socolissimo.getcurrency" type="currency" id=$CURRENCY}{$SYMBOL}{/loop}
+                                        </td>
+                                        <td>
+                                          {$SOCOLISSIMO_TYPE} {if $SOCOLISSIMO_CODE}(<span title="{intl l='Relay ID' d='socolissimo.ai'}">{$SOCOLISSIMO_CODE}</span>){/if}
                                         </td>
                                         <td>
                                             {form_field form=$form field="order_weight_"|cat:$ID}

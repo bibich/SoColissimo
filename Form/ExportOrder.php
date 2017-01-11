@@ -22,7 +22,9 @@
 /*************************************************************************************/
 
 namespace SoColissimo\Form;
+
 use Propel\Runtime\ActiveQuery\Criteria;
+use SoColissimo\Model\OrderAddressSocolissimoQuery;
 use SoColissimo\SoColissimo;
 use Thelia\Form\BaseForm;
 use Thelia\Model\Base\OrderQuery;
