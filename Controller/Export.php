@@ -35,7 +35,13 @@ use Thelia\Core\Event\TheliaEvents;
 use Thelia\Core\HttpFoundation\Response;
 use Thelia\Model\Base\CountryQuery;
 use Thelia\Model\ConfigQuery;
+use Thelia\Model\Country;
+use Thelia\Model\Customer;
+use Thelia\Model\CustomerTitle;
+use Thelia\Model\CustomerTitleI18n;
 use Thelia\Model\CustomerTitleI18nQuery;
+use Thelia\Model\Order;
+use Thelia\Model\OrderAddress;
 use Thelia\Model\OrderAddressQuery;
 use Thelia\Model\OrderQuery;
 use Thelia\Core\Event\Order\OrderEvent;
@@ -65,6 +71,21 @@ class Export extends BaseAdminController
         $csv = new CSV(self::CSV_SEPARATOR);
 
         try {
+
+            $exportType = ConfigQuery::read(SoColissimo::CONFIG_EXPORT_TYPE, SoColissimo::EXPORT_COLISHIP);
+
+            if ($exportType == SoColissimo::EXPORT_COLISHIP) {
+
+                $accountNumber = ConfigQuery::read(SoColissimo::CONFIG_LOGIN);
+                $senderCode = ConfigQuery::read(SoColissimo::CONFIG_SENDER_CODE);
+
+                if (null === $accountNumber || null === $senderCode) {
+                    throw new \Exception($this->getTranslator()->trans(
+                        'You must fill in your account number and sender code before'
+                    ));
+                }
+            }
+
             $form  = new ExportOrder($this->getRequest());
             $vform = $this->validateForm($form);
 
@@ -96,6 +117,11 @@ class Export extends BaseAdminController
                     Criteria::IN
                 )
                 ->find();
+
+            /**
+             * Get store's name
+             */
+            $store_name = ConfigQuery::read("store_name");
 
             // check form && exec csv
             /** @var \Thelia\Model\Order $order */
@@ -183,36 +209,49 @@ class Export extends BaseAdminController
                     $relay_id = OrderAddressSocolissimoQuery::create()
                         ->findPk($order->getDeliveryOrderAddressId());
 
-                    /**
-                     * Get store's name
-                     */
-                    $store_name = ConfigQuery::read("store_name");
+                    $productCode = ($relay_id !== null) ? $relay_id->getType() : 'DOM';
+                    $relayId = ($relay_id !== null) ? ($relay_id->getCode() == 0) ? '' : $relay_id->getCode() : '';
+
+                    $columns = [];
+
+                    if ($exportType == SoColissimo::EXPORT_EXPEDITOR) {
+                        $columns = $this->exportOrderForExpeditor(
+                            $order,
+                            $address,
+                            $country,
+                            $customer,
+                            $title,
+                            $phone,
+                            $cellphone,
+                            $productCode,
+                            $relayId,
+                            $weight,
+                            $store_name
+                        );
+                    } else {
+                        $columns = $this->exportOrderForColiship(
+                            $order,
+                            $address,
+                            $country,
+                            $customer,
+                            $title,
+                            $accountNumber,
+                            $senderCode,
+                            $store_name,
+                            $phone,
+                            $cellphone,
+                            $productCode,
+                            $relayId,
+                            $weight
+                        );
+                    }
+
                     /**
                      * Write CSV line
                      */
                     $csv->addLine(
                         CSVLine::create(
-                            array(
-                                $address->getFirstname(),
-                                $address->getLastname(),
-                                $address->getCompany(),
-                                $address->getAddress1(),
-                                $address->getAddress2(),
-                                $address->getAddress3(),
-                                $address->getZipcode(),
-                                $address->getCity(),
-                                $country->getIsoalpha2(),
-                                $phone,
-                                $cellphone,
-                                $order->getRef(),
-                                $title->getShort(),
-                                // the Expeditor software used to accept a relay id of 0, but no longer does
-                                ($relay_id !== null) ? ($relay_id->getCode() == 0) ? '' : $relay_id->getCode() : 0,
-                                $customer->getEmail(),
-                                $weight,
-                                $store_name,
-                                ($relay_id !== null) ? $relay_id->getType() : 0
-                            )
+                            $columns
                         )
                     );
 
@@ -242,8 +281,99 @@ class Export extends BaseAdminController
             array(
                 "Content-Encoding"=>"ISO-8889-1",
                 "Content-Type"=>"application/csv-tab-delimited-table",
-                "Content-disposition"=>"filename=expeditor_thelia.csv"
+                "Content-disposition"=>"filename=" . $exportType . "_thelia.csv"
             )
         );
+    }
+
+
+    /**
+     * generate line columns for coliship export
+     *
+     *
+     * @rturn array
+     */
+    protected function exportOrderForColiship(
+        Order $order,
+        OrderAddress $address,
+        Country $country,
+        Customer $customer,
+        CustomerTitleI18n $title,
+        $accountNumber,
+        $senderCode,
+        $storeName,
+        $phone,
+        $cellphone,
+        $productCode,
+        $relayId, // no field in CSV for now
+        $weight
+    ) {
+        $cols = array_fill(0, 114, '');
+
+        $cols[0] = 'CLS';
+        $cols[1] = $accountNumber;
+        $cols[2] = $order->getRef();
+        $cols[3] = $productCode;
+        $cols[5] = $storeName;
+        $cols[6] = $weight;
+        $cols[14] = $senderCode;
+
+        $cols[37] = $address->getLastname();
+        $cols[38] = $address->getFirstname();
+        $cols[39] = $address->getAddress1();
+        $cols[40] = $address->getAddress2();
+        $cols[41] = $address->getAddress3();
+        $cols[43] = $country->getIsoalpha2();
+        $cols[44] = $address->getCity();
+        $cols[45] = $address->getZipcode();
+
+        $cols[46] = $phone;
+        $cols[47] = $cellphone;
+
+        $cols[52] = $customer->getEmail();
+
+        return $cols;
+    }
+
+    /**
+     * generate columns for an expeditor inet export
+     *
+     * @return array
+     */
+    protected function exportOrderForExpeditor(
+        Order $order,
+        OrderAddress $address,
+        Country $country,
+        Customer $customer,
+        CustomerTitleI18n $title,
+        $phone,
+        $cellphone,
+        $productCode,
+        $relayId,
+        $weight,
+        $store_name
+    ) {
+        $columns = [
+            $address->getFirstname(),
+            $address->getLastname(),
+            $address->getCompany(),
+            $address->getAddress1(),
+            $address->getAddress2(),
+            $address->getAddress3(),
+            $address->getZipcode(),
+            $address->getCity(),
+            $country->getIsoalpha2(),
+            $phone,
+            $cellphone,
+            $order->getRef(),
+            $title->getShort(),
+            $relayId,
+            $customer->getEmail(),
+            $weight,
+            $store_name,
+            $productCode
+        ];
+
+        return $columns;
     }
 }
